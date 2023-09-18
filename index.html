@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container-lg">
+        <div class="d-flex justify-content-center" id="root">
+            <form class="mt-4" id="applicationForm">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="FirstNameInput" class="form-label">First name</label>
+                        <input type="text" class="form-control" id="FirstNameInput" name="firstName" required>
+                    </div>
+                    <div class="col">
+                        <label for="LastNameInput" class="form-label">Last name</label>
+                        <input type="text" class="form-control" id="LastNameInput" name="lastName" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="EmailInput" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="EmailInput" name="emailAddress" required>
+                </div>
+                <div class="mb-3">
+                    <label for="FileInput_MLetter" class="form-label">Motivational letter</label>
+                    <input type="file" class="form-control" id="FileInput_MLetter" accept=".pdf" name="motivationLetter"
+                        required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript">
+        async function handleFormSubmission(event){
+            const root = document.getElementById('root');
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const motivationLetter_fileContent = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(data.motivationLetter);
+            });
+
+            const formattedData = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                emailAddress: data.emailAddress,
+                motivationLetter: {
+                    fileName: data.motivationLetter.name,
+                    fileType: data.motivationLetter.type,
+                    fileContent: motivationLetter_fileContent
+                }
+            };
+
+            fetch('endpoint_url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formattedData)
+            });
+
+            root.innerHTML = '<div class="alert alert-success" role="alert">Your application has been submitted successfully!</div>';
+        }
+
+        window.onload = () => {
+            const form = document.getElementById('applicationForm');
+            form.addEventListener('submit', (event) => handleFormSubmission(event));
+        }
+    </script>
+</body>
+</html>
